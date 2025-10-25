@@ -1,0 +1,57 @@
+   ┌───────────────────────────────┐
+   │    INRIX Traffic Images (S3)  │
+   │  (Updated every 5 min)        │
+   └──────────────┬────────────────┘
+                  │
+                  ▼
+   ┌───────────────────────────────┐
+   │   Lambda: Tile Scoring        │
+   │  - Triggered by new images    │
+   │  - Calls Rekognition / SageMaker
+   │    to classify congestion     │
+   │  - Writes results to DynamoDB │
+   └──────────────┬────────────────┘
+                  │
+   ┌──────────────┴──────────────────────────────┐
+   │   DynamoDB: Traffic_Tiles Table             │
+   │   - tile_id, timestamp, congestion score    │
+   └──────────────┬──────────────────────────────┘
+                  │
+                  ▼
+   ┌───────────────────────────────┐
+   │   Lambda: Route Engine        │
+   │  - Called via API Gateway     │
+   │  - Gets baseline from         │
+   │    Amazon Location Service    │
+   │  - Applies penalties using    │
+   │    congestion scores          │
+   │  - Returns ETA + rationale    │
+   └──────────────┬────────────────┘
+                  │
+          ┌───────┴────────┐
+          │                │
+          ▼                ▼
+┌──────────────────┐   ┌─────────────────────┐
+│ API Gateway REST │   │ Bedrock (LLM)       │
+│ /route, /explain │   │ - Generates natural │
+│ endpoints         │   │   language reason   │
+└──────────────────┘   │   for re-route      │
+                      └─────────┬───────────┘
+                                │
+                                ▼
+                      ┌─────────────────────┐
+                      │ Frontend (React)    │
+                      │ - Map view (Amazon  │
+                      │   Location / MapLibre)
+                      │ - Displays route,   │
+                      │   ETA, rationale    │
+                      │ - Re-route alerts   │
+                      └─────────────────────┘
+                                │
+                                ▼
+                    ┌────────────────────────┐
+                    │ Users: First Responders │
+                    │ - Select destination    │
+                    │ - View fastest path     │
+                    │ - Get live re-route     │
+                    └────────────────────────┘
