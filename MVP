@@ -1,0 +1,19 @@
+MVP in ~5 moving parts (maps → route → reroute → explain → demo)
+	1.	Live Traffic Layer (INRIX images → congestion score)
+	•	Pull the 5-min INRIX Seattle images from S3.
+	•	Run a tiny CV classifier (SageMaker or Rekognition Custom Labels) to tag tiles as Free / Moderate / Heavy.
+	•	Store results (tile_id, timestamp, score) in DynamoDB.
+	2.	Routing API (Lambda + API Gateway)
+	•	Input: origin, destination, unit type (engine/medic), priority.
+	•	Compute route using Amazon Location Service (or Mapbox if you prefer) and penalize road segments whose tiles are “Heavy.”
+	•	Output: polyline, ETA, confidence, last updated.
+	3.	Realtime Re-route (EventBridge + DynamoDB Streams)
+	•	When new INRIX scores arrive (every 5 minutes), compare with the active route’s tiles.
+	•	If degradation > threshold, push a WebSocket/SSE event to the client to “Re-route now.”
+	4.	Natural-language “Reasoning” (Bedrock)
+	•	Bedrock (Llama/Mistral) explains why a route changed: “Accident north of I-5; congestion increased, saving 3m via 4th Ave.”
+	•	Also powers a simple chat: “Fastest route to Harborview from Station 10?”
+	5.	Frontend (React/Vite)
+	•	Map with route + colored traffic overlay.
+	•	Big buttons: “Dispatch”, “Re-route”, “Share ETA”.
+	•	Minimal, touch-first UI that looks great in the demo.
