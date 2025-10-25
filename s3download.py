@@ -7,7 +7,7 @@ load_dotenv()
 # Put your AWS credentials in a .env file
 access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
 secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
-bucket_name = os.getenv("INRIX_S3_BUCKET_NAME")
+bucket_name = os.getenv("AWS_S3_BUCKET_NAME")
 
 # Create an S3 client
 s3 = boto3.client(
